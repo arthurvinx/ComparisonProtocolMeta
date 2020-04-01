@@ -2,7 +2,7 @@
 
 install.bioc <- function(pkg){
   vers <- getRversion()
-  if (vers >= "3.6"){
+  if (vers >= "3.5"){
     if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
     BiocManager::install(pkg)
   }else{
