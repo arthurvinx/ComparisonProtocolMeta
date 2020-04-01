@@ -24,7 +24,6 @@ if(length(cran_pkgs.inst) > 0){
   for(pkg in cran_pkgs.inst){
     message(paste0("Installing Package:'", pkg, "'..."))
     install.packages(pkg, repo = "http://cran.rstudio.org", dependencies = TRUE)
-    message("Installed!!!")
   }
 }
 
@@ -37,6 +36,5 @@ if(length(bioc_pkgs.inst) > 0){
   for(pkg in bioc_pkgs.inst){
     message(paste0("Installing Package:'", pkg, "'..."))
     install.bioc(pkg)
-    message("Installed!!!")
   }
 }
