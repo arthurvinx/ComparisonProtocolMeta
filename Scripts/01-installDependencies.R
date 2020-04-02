@@ -1,4 +1,4 @@
-# Universal Bioconductor package installation function
+# Universal Bioconductor package installation function ####
 
 install.bioc <- function(pkg){
   vers <- getRversion()
@@ -15,7 +15,7 @@ install.bioc <- function(pkg){
   }
 }
 
-# Install CRAN dependencies
+# Install CRAN dependencies ####
 
 cran_pkgs <- c("data.table", "ggplot2", "dplyr", "vegan", "Rmpfr", "tidyr")
 cran_pkgs.inst <- cran_pkgs[!(cran_pkgs %in% rownames(installed.packages()))]
@@ -24,10 +24,11 @@ if(length(cran_pkgs.inst) > 0){
   for(pkg in cran_pkgs.inst){
     message(paste0("Installing Package:'", pkg, "'..."))
     install.packages(pkg, repo = "http://cran.rstudio.org", dependencies = TRUE)
+    message("Installed!!!")
   }
 }
 
-# Install Bioconductor dependencies
+# Install Bioconductor dependencies ####
 
 bioc_pkgs <- c("GO.db")
 bioc_pkgs.inst <- bioc_pkgs[!(bioc_pkgs %in% rownames(installed.packages()))]
@@ -36,5 +37,6 @@ if(length(bioc_pkgs.inst) > 0){
   for(pkg in bioc_pkgs.inst){
     message(paste0("Installing Package:'", pkg, "'..."))
     install.bioc(pkg)
+    message("Installed!!!")
   }
 }
