@@ -178,7 +178,7 @@ metricsM <- function(df, mdf, dRank = "s"){
   return(res)
 }
 
-rank <- "s" # Change to "s" for species, "g" for genus, and "p" for phylum ####
+rank <- "s" # Change to "s" for species, "g" for genus, or "p" for phylum ####
 
 resP <- metricsP(taxP, metadata, dRank = rank)
 resP
@@ -229,7 +229,7 @@ getMtps <- function(df, mdf, dRank = "s"){
   return(res)
 }
 
-rank <- "s" # Change to "s" for species, "g" for genus, and "p" for phylum ####
+rank <- "s" # Change to "s" for species, "g" for genus, or "p" for phylum ####
 
 resP <- getPtps(taxP, metadata, dRank = rank)
 resM <- getMtps(taxM, metadata, dRank = rank)
