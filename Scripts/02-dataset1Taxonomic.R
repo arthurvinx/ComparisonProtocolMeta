@@ -89,7 +89,7 @@ sum(idx)
 taxP <- taxP[!(grepl("^Unknown$", taxP$V2)),]
 taxM <- taxM[!(grepl("^NCBI;Not assigned;$", taxM$V2)),]
 
-# Metrics ####
+# Get metrics ####
 
 # Example for perfect metrics
 
@@ -229,13 +229,18 @@ getMtps <- function(df, mdf, dRank = "s"){
   return(res)
 }
 
-rank <- "s" # change ####
+rank <- "s" # Change to "s" for species, "g" for genus, and "p" for phylum ####
 
 resP <- getPtps(taxP, metadata, dRank = rank)
 resM <- getMtps(taxM, metadata, dRank = rank)
 
+# Plots ####
+
 aux <- metadata %>% group_by(ranks) %>% summarise(total = sum(num_reads)) %>% arrange(desc(total))
-aux <- aux[-1,] # controle negativo
+
+# Remove negative control and unknown genus/phylum
+
+aux <- aux[-1,]
 temp <- strsplit(aux$ranks, "; ")
 aux$s <- sapply(temp, "[", 8)
 aux$g <- sapply(temp, "[", 7)
@@ -245,9 +250,7 @@ g <- aux %>% group_by(g) %>% summarise(total = sum(total)) %>% arrange(desc(tota
 p <- aux %>% group_by(p) %>% summarise(total = sum(total)) %>% arrange(desc(total))
 g <- g[-which(g$g=="Unknown genus"),]
 p <- p[-which(p$p=="Unknown phylum"),]
-rm(aux, temp)
-
-# plots ####
+rm(aux, temp, bysk)
 
 resP <- as.data.frame(table(resP$match))
 resM <- as.data.frame(table(resM$match))
@@ -281,46 +284,63 @@ if(rank=="s"){
 }else{
   df$p <- NULL
 }
-df <- df %>% gather("Source", "value")
-df$x <- rep(1:n, 3)
+M <- df[, c(1, 3)]
+P <- df[, c(1, 2)]
+dfM <- M %>% gather("Source", "value")
+dfM$x <- rep(1:n, 2)
+dfP <- P %>% gather("Source", "value")
+dfP$x <- rep(1:n, 2)
+if(rank=="s"){
+  ylim <- 16000
+  legend <- "Species"
+}else if(rank=="g"){
+  ylim <- 18000
+  legend <- "Genus"
+}
+ticks <- 1000
+c <- c("#619cff", "#f8766d")
+rates <- data.frame(m = M$Megan/M$Metadata, p = P$Protocol/P$Metadata, stringsAsFactors = F)
+rates$x <- 1:nrow(rates)
 
-# change ####
-ylim <- 165000 # 16000 18000 165000
-legend <- "Phylum" # Species Genus Phylum
+# Plot counts
 
-# top15
-temp <- df[df$x %in% 1:15, ]
-p <- ggplot(temp, aes(x = x, y = value, fill = Source)) +
-  geom_bar(position = "dodge", stat = "identity") +
-  labs(x = legend, y = "Count", title = paste0("Count per ", tolower(legend))) +
-  theme_bw() + theme(plot.title = element_text(hjust = 0.5)) +
-  scale_y_continuous(limits = c(0, ylim), breaks = seq.int(0, ylim, 1000))
+p <- ggplot(NULL, aes(x = x, y = value)) +
+  geom_bar(aes(fill = "Metadata"), data = dfM[dfM$Source=="Metadata",], position = "dodge",
+           stat = "identity", colour = "gray", fill = "gray") +
+  geom_bar(aes(fill = "Megan"), data = dfM[dfM$Source=="Megan",], position = "dodge",
+           stat = "identity", colour = c[2], fill = c[2]) +
+  labs(x = legend, y = "Count", title = paste0("Megan True positives and Expected, ", tolower(legend))) +
+  theme_bw() + scale_x_reverse() + coord_flip() +
+  scale_y_continuous(limits = c(0, ylim), breaks = seq.int(0, ylim, ticks))
 plot(p)
 
-c <- c("#00ba38", "#619cff", "#f8766d")
-temp <- df[df$Source=="Metadata", ]
-p <- ggplot(temp, aes(x = x, y = value)) +
-  geom_bar(position = "dodge", stat = "identity", colour = c[1], fill = c[1]) +
-  labs(x = legend, y = "Count", title = paste0("Metadata ", tolower(legend), " count")) +
-  theme_bw() + theme(plot.title = element_text(hjust = 0.5)) +
-  scale_y_continuous(limits = c(0, ylim), breaks = seq.int(0, ylim, 1000))
+p <- ggplot(NULL, aes(x = x, y = value)) +
+  geom_bar(aes(fill = "Metadata"), data = dfP[dfP$Source=="Metadata",], position = "dodge",
+           stat = "identity", colour = "gray", fill = "gray") +
+  geom_bar(aes(fill = "Protocol"), data = dfP[dfP$Source=="Protocol",], position = "dodge",
+           stat = "identity", colour = c[1], fill = c[1]) +
+  labs(x = legend, y = "Count", title = paste0("Protocol True positives and Expected, ", tolower(legend))) +
+  theme_bw() + scale_x_reverse() + coord_flip() +
+  scale_y_continuous(limits = c(0, ylim), breaks = seq.int(0, ylim, ticks))
 plot(p)
 
-temp <- df[df$Source=="Protocol", ]
-p <- ggplot(temp, aes(x = x, y = value)) +
-  geom_bar(position = "dodge", stat = "identity", colour = c[2], fill = c[2]) +
-  labs(x = legend, y = "Count", title = paste0("Protocol ", tolower(legend), " count")) +
-  theme_bw() + theme(plot.title = element_text(hjust = 0.5)) +
-  scale_y_continuous(limits = c(0, ylim), breaks = seq.int(0, ylim, 1000))
+# Plot rates
+
+p <- ggplot(NULL, aes(x = x, y = value)) +
+  geom_bar(aes(fill = "Megan"), data = data.frame(x = rates$x, value = rates$m), position = "dodge",
+           stat = "identity", colour = c[2], fill = c[2]) +
+  labs(x = legend, y = "Rate", title = paste0("Megan Rates, ", tolower(legend))) +
+  theme_bw() + scale_x_reverse() + coord_flip()
 plot(p)
 
-temp <- df[df$Source=="Megan", ]
-p <- ggplot(temp, aes(x = x, y = value)) +
-  geom_bar(position = "dodge", stat = "identity", colour = c[3], fill = c[3]) +
-  labs(x = legend, y = "Count", title = paste0("Megan ", tolower(legend), " count")) +
-  theme_bw() + theme(plot.title = element_text(hjust = 0.5)) +
-  scale_y_continuous(limits = c(0, ylim), breaks = seq.int(0, ylim, 1000))
+p <- ggplot(NULL, aes(x = x, y = value)) +
+  geom_bar(aes(fill = "Protocol"), data = data.frame(x = rates$x, value = rates$p), position = "dodge",
+           stat = "identity", colour = c[1], fill = c[1]) +
+  labs(x = legend, y = "Rate", title = paste0("Protocol Rates, ", tolower(legend))) +
+  theme_bw() + scale_x_reverse() + coord_flip()
 plot(p)
+
+# Get diversity indices ####
 
 metadata <- metadata[-1,]
 metadata <- metadata %>% group_by(ranks) %>% summarise(total = sum(num_reads)) %>% arrange(desc(total))
@@ -328,7 +348,29 @@ metadata <- metadata %>% group_by(ranks) %>% summarise(total = sum(num_reads)) %
 taxM <- as.data.frame(table(taxM$V2))
 taxP <- as.data.frame(table(taxP$V2))
 
+# Protocol
+
 v <- taxP$Freq
+
+H <- diversity(v)
+EH <- H/log(specnumber(v))
+
+round(H, digits = 4)
+round(EH, digits = 4)
+
+# Megan
+
+v <- taxM$Freq
+
+H <- diversity(v)
+EH <- H/log(specnumber(v))
+
+round(H, digits = 4)
+round(EH, digits = 4)
+
+# Expected
+
+v <- metadata$total
 
 H <- diversity(v)
 EH <- H/log(specnumber(v))
