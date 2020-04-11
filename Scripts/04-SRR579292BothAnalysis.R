@@ -112,28 +112,6 @@ top10P <- sapply(strsplit(taxP[1:10, 1], ";"), tail, n = 1)
 top10P <- gsub("_", " ", top10P)
 invisible(sapply(top10P, getCount, M = taxM, P = taxP))
 
-# Get diversity indices ####
-
-# Protocol
-
-v <- taxP$Freq
-
-H <- diversity(v)
-EH <- H/log(specnumber(v))
-
-round(H, digits = 4)
-round(EH, digits = 4)
-
-# Megan
-
-v <- taxM$Freq
-
-H <- diversity(v)
-EH <- H/log(specnumber(v))
-
-round(H, digits = 4)
-round(EH, digits = 4)
-
 # Compare related to the top 10 ####
 
 getAllRelated <- function(desc, M, P){
