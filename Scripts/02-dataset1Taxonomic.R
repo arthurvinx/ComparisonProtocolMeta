@@ -6,7 +6,6 @@ rm(list = ls())
 
 library(data.table)
 library(dplyr)
-library(vegan)
 library(Rmpfr)
 library(ggplot2)
 library(tidyr)
